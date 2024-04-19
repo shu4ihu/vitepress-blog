@@ -14,6 +14,14 @@ export default {
         {
           text: '手写并发任务限制',
           link: '/handwrite/并发任务限制.md'
+        },
+        {
+          text: '手写版本号问题',
+          link: '/handwrite/版本号问题.md'
+        },
+        {
+          text: '手写 Sleep',
+          link: '/handwrite/Sleep.md'
         }
       ]
     }

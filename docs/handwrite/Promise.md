@@ -1,1 +1,124 @@
 # 手写 Promise
+
+## Promise.all
+
+根据阮一峰老师对 all 的介绍，这个方法是用于将多个 Promise 实例，包装成一个新的 Promise 实例。
+
+个人理解这句话，一个 Promise 实例是只有一个状态的，而多个 Promise 实例是有多个状态的，那么将多个 Promise 实例包装成一个新的 Promise 实例，其实就很好理解，新的 Promise 实例的状态是根据旧的多个 Promise 实例的状态决定的。
+
+其实具体来看也是如此，场景如下：
+
+```javascript
+const p = Promise.all([p1, p2, p3])
+```
+
+我们都知道 Promise 有三种状态，包含一种初始态 (pending)、两种最终态 (fulfilled、rejected)。那么 all 方法返回的新 Promise 实例的最终态也不外乎两种，所以我们只需要知道哪种情况下对应 pending -> fulfilled 和 pending -> rejected，那么就能理解并手写 all 方法。
+
+以上述代码为例：
+1. pending -> fulfilled：只有传入参数中的所有 Promise 实例的状态都变成 fulfilled，那么 p 的状态也会切换成 fulfilled，此时所有 Promise 实例的返回值都会组成一个数组，然后传递给 p 的回调函数
+2. pending -> rejected：只要传入参数中的 Promise 实例有一个状态变成 rejected，那么 p 的状态也会切换成 rejected，此时第一个被 reject 的实例的返回值就会被传递给 p 的回调函数
+
+所以，对于传入的 Promise 实例数组来说，all 是非常苛刻的，只要失败一个就是失败。当然对于 all 来说，接受的参数不一定必须是 Promise 实例数组，只要传入的参数具有 Iterator 接口即可。
+
+完整代码如下：
+```javascript
+function promiseAll(arr) {
+  if (typeof arr[Symbol.iterator] !== 'function') {
+    throw new TypeError(`${arr} is not iterable`)
+  }
+  if (arr.length === 0) {
+    return Promise.resolve([])
+  }
+  return new Promise((resolve, reject) => {
+    // 记录已经 resolve 的 promise 的数量
+    let resolvedCount = 0
+    // 记录 resolve 后的结果
+    const res = new Array(arr.length)
+
+    for (let i = 0; i < arr.length; i++) {
+      Promise.resolve(arr[i]).then(
+        // 成功
+        value => {
+          resolvedCount++
+          res[i] = value
+
+          // 全部都成功了，将所有结果 resolve
+          if (resolvedCount === arr.length) {
+            resolve(res)
+          }
+        }, 
+        // 失败
+        err => {
+          // 直接 reject
+          reject(err)
+        }
+      )
+    }
+  })
+}
+```
+
+## Promise.allSettled
+
+跟 all 挺相似的，区别在于，all 中的单个实例的 rejectd 状态会直接影响新实例的状态，导致新实例也变成 rejectd，而 allSettled 则是等待所有给定的 Promise 实例已经 fulfilled 或 rejected。allSettled 只有 pending 和 fulfilled 状态，对于 allSettled 来说，pending 状态就是所有 Promise 实例都还没有完成，fulfilled 状态就是所有 Promise 实例都已经完成。allSettled 返回值也会传递给新实例的回调函数，返回值是一个数组，数组中的每个元素都是一个结果对象，结果对象包含 status ("fulfilled" 或 "rejected") 和 value 或 reason 分别对应两个 status。
+
+完整代码如下：
+
+```javascript
+function promiseAllSettled(arr) {
+  if (typeof arr[Symbol.iterator] !== 'function') {
+    throw new Error(`${arr} is not iterable`)
+  }
+
+  return new Promise((resolve) => {
+    if (arr.length === 0) resolve([])
+
+    let settledCount = 0
+    const res = new Array(arr.length)
+
+    arr.forEach((p, index) => {
+      Promise.resolve(p).then(val => {
+        settledCount++
+        res[index] = {
+          status = 'fulfilled',
+          value = val
+        }
+        if (settledCount === arr.length) resolve(res)
+      },
+      err => {
+        settledCount++
+        res[index] = {
+          status = 'rejected',
+          reason = err
+        }
+        if (settledCount === arr.length) resolve(res)
+      }
+      )
+    })
+  })
+}
+```
+
+## Promise.race
+
+描述上跟 all 相似，race 同样是将多个 Promise 实例包装成一个新的 Promise 实例，但是实际行为跟 all 却是反着来，理解起来比 all 更加简单，就是原先的多个 Promise 实例中，
+最先改变状态的实例，新实例的状态跟它一起改变，改变之后返回值就会传递给新实例的回调函数
+
+```javascript
+function promiseRace(arr) {
+  if (typeof arr[Symbol.iterator] !== 'function') {
+    throw new TypeError(`${arr} is not iterable`)
+  }
+  if (arr.length === 0) {
+    throw new TypeError('can not be empty')
+  }
+  return new Promise((resolve, reject) => {
+    arr.forEach(p => {
+      Promise.resolve(p).then(val => resolve(val), err => reject(err))
+    })
+  })
+}
+```
+
+## Promise.any
+
