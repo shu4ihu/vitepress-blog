@@ -39,14 +39,14 @@ jobs:
         with:
           path: docs/.vitepress/dist
 
-deploy:
-  environment:
-    name: github-pages
-    url: ${{ steps.deployment.output.page_url }}
-  needs: build
-  runs-on: ubuntu-latest
-  name: Deploy
-  steps: 
-    - name: deploy
-      id: deployment
-      uses: actions/deploy-pages@v4
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.output.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps: 
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
