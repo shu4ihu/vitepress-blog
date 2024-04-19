@@ -122,3 +122,42 @@ function promiseRace(arr) {
 
 ## Promise.any
 
+个人感觉 any 就是反过来的 all， all 的状态变化规则是：
+- 全部 fulfilled 才 fulfilled，有 rejected 就 rejected
+而 any 的状态变化规则是：
+- 全部 rejected 才 rejected，有 fulfilled 就 fulfilled
+
+所以，会手写 all，就能手写 any，因为它们的原理是很类似的，直接上代码：
+
+```javascript
+function promiseAny(arr) {
+  if (typeof arr[Symbol.iterator] !== 'function') {
+    throw new Error(`${arr} is not iterable`)
+  }
+
+  return new Promise((resolve, reject) => {
+    if (arr.length === 0) reject(new AggregateError([], 'All promises were rejected'))
+    let rejectedCount = 0
+    const res = new Array(arr.length)
+    arr.forEach((p, index) => {
+      Promise.resolve(p).then(val => {
+        resolve(val)
+      },
+      err => {
+        rejectedCount++
+        res[index] = err
+
+        if (rejectedCount === arr.length) {
+          reject(new AggregateError(res))
+        }
+      })
+    })
+  })
+}
+```
+
+额外介绍一下 AggregateError 对象，这个错误对象是在 ES2021 中，为了配合 any 新引入的错误对象，可以在一个 AggregateError 错误对象中封装多个不同的错误。如果是某个操作同时引发了多个错误需要将全部错误信息都抛出，那么就可以抛出一个 AggregateError 错误对象，将各种错误封装在这个对象中。
+
+AggregateError 本身就是一个构造函数，接受 2 个参数：
+- errors：错误对象数组，该参数是必须的。
+- message：字符串，表示该对象抛出时的错误信息，该参数是可选的。

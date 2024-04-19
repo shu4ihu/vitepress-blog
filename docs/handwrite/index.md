@@ -8,5 +8,5 @@
 2. 有并发限制的异步任务调度器
 3. 版本号比较
 4. 版本号排序
-5. Promise.all
-6. Sleep
+5. Sleep
+6. Promise.all / allSettled / race / any
