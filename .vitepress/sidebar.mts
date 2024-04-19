@@ -10,6 +10,10 @@ export default {
         {
           text: '手写防抖节流',
           link: '/handwrite/防抖节流.md'
+        },
+        {
+          text: '手写并发任务限制',
+          link: '/handwrite/并发任务限制.md'
         }
       ]
     }
