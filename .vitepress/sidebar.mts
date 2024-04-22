@@ -37,6 +37,11 @@ export default {
       ]
     }
   ],
-  '/react' :[],
+  '/react' :[
+    {
+    text: 'Hooks',
+    link: '/react/Hooks.md'
+    }
+  ],
   '/vue' :[]
 };

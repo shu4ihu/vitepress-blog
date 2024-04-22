@@ -1,5 +1,173 @@
 # 手写 Promise
 
+根据 Promise A+ 规范对 Promise 的定义，「`promise` 是一个拥有符合本规范的 then 方法的对象或者函数」
+
+规范要求：
+
+1. 状态：pending、fulfilled、rejected
+
+    pending → fulfilled || rejected ☑️
+
+    fulfilled || rejected → 任意状态 ❌
+
+    当promise 处于 fulfilled 或 rejected 状态时，必须有一个对应的value 或 reason
+2. then 方法
+
+    promise 必须要提供一个 then 方法，并能通过此方法去访问当前或者最终的 value 或 reason
+
+    then 方法接受两个可选参数 `onFulfilled` 和 `onRejected` 
+
+    1. then 必须要返回promise
+    2. then可以被同一个promise重复调用
+    3. 针对`onFulfilled` 和 `onRejected` 的情况分析
+        - 不是函数，则忽略
+        - `onFulfilled` 是一个函数
+
+            必须在promise的状态被`fulfilled` 之后，以promise的 value 作为第一个参数调用
+
+            不能再promise改变状态之前调用
+
+            只能被调用一次
+        - `onRejected` 同理
+
+        两个回调函数只能以函数形式调用
+3. 特殊情况
+    1. 自引用、循环引用检测
+    2. 处理promise
+
+```JavaScript
+let x = new Promise((resolve, reject) => {
+  resolve(100);
+});
+
+let promise = new Promise((resolve, reject) => {
+  resolve(x); // promise的状态将跟随x的状态
+});
+
+promise.then(value => {
+  console.log(value); // 100
+});
+```
+    3. 处理thenable对象
+
+```JavaScript
+let x = {
+  then: function(resolve, reject) {
+    resolve(42);
+  }
+};
+
+let promise = new Promise((resolve, reject) => {
+  resolve(x); // promise解析thenable对象x
+});
+
+promise.then(value => {
+  console.log(value); // 42
+});
+
+```
+    4. 处理非thenable的值，穿透
+
+```javascript
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
+
+class MyPromise {
+	#state = PENDING;
+	#result = undefined;
+	#handlers = [];
+
+	#isPromise(value) {
+		if (value !== null && (typeof value === "object" || typeof value === "function")) {
+			return typeof value.then === "function";
+		}
+		return false;
+	}
+
+	#runMicroTask(func) {
+		// node 环境
+		if (typeof process === "object" && typeof process.nextTick === "function") {
+			process.nextTick(func);
+		} else if (typeof MutationObserver === "function") {
+			const ob = new MutationObserver(func);
+			const text = document.createTextNode("1");
+			ob.observe(text, {
+				characterData: true,
+			});
+			text = 2;
+		} else {
+			setTimeout(func, 0);
+		}
+	}
+
+	#runOne(callback, resolve, reject) {
+		this.#runMicroTask(() => {
+			if (typeof callback === "function") {
+				try {
+					const data = callback(this.#result);
+					if (this.#isPromise(data)) {
+						data.then(resolve, reject);
+					} else resolve(data);
+				} catch (err) {
+					reject(err);
+				}
+			} else {
+				const settled = this.#state === FULFILLED ? resolve : reject;
+				settled(this.#result);
+				return;
+			}
+		});
+	}
+
+	#run() {
+		if (this.#state === PENDING) return;
+		while (this.#handlers.length) {
+			const { onFulfilled, onRejected, resolve, reject } = this.#handlers.shift();
+			if (this.#state === FULFILLED) {
+				this.#runOne(onFulfilled, resolve, reject);
+			} else {
+				this.#runOne(onRejected, resolve, reject);
+			}
+		}
+	}
+
+	#changeState(state, result) {
+		if (this.#state !== PENDING) return;
+		this.#state = state;
+		this.#result = result;
+		this.#run();
+	}
+
+	then(onFulfilled, onRejected) {
+		return new MyPromise((resolve, reject) => {
+			console.log(this.#handlers.length);
+			this.#handlers.push({
+				onFulfilled,
+				onRejected,
+				resolve,
+				reject,
+			});
+			this.#run();
+		});
+	}
+
+	constructor(executor) {
+		const resolve = (result) => {
+			this.#changeState(FULFILLED, result);
+		};
+		const reject = (reason) => {
+			this.#changeState(REJECTED, reason);
+		};
+		try {
+			executor(resolve, reject);
+		} catch (err) {
+			reject(REJECTED, err);
+		}
+	}
+}
+```
+
 ## Promise.all
 
 根据阮一峰老师对 all 的介绍，这个方法是用于将多个 Promise 实例，包装成一个新的 Promise 实例。
