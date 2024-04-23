@@ -3,5 +3,6 @@ export default [
   { text: 'JS', link: '/js/index.md'},
   { text: '手写题', link: '/handwrite/index.md' },
   { text: 'React', link: '/react/index.md'},
-  { text: 'Vue', link: '/vue/index.md'}
+  { text: 'Vue', link: '/vue/index.md'},
+  { text: '计网', link: '/计算机网络/index.md'}
 ];

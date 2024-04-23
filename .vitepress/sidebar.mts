@@ -43,5 +43,11 @@ export default {
     link: '/react/Hooks.md'
     }
   ],
-  '/vue' :[]
+  '/vue' :[],
+  '/计算机网络' :[
+    {
+      text: '计网',
+      link: '/计算机网络/index.md'
+    }
+  ]
 };
