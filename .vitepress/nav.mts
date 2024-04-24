@@ -4,5 +4,5 @@ export default [
   { text: '手写题', link: '/handwrite/index.md' },
   { text: 'React', link: '/react/index.md'},
   { text: 'Vue', link: '/vue/index.md'},
-  { text: '计网', link: '/计算机网络/index.md'}
+  { text: '其他', link: '/其他/index.md'}
 ];

@@ -44,10 +44,14 @@ export default {
     }
   ],
   '/vue' :[],
-  '/计算机网络' :[
+  '/其他' :[
     {
-      text: '计网',
-      link: '/计算机网络/index.md'
+      text: '计算机网络',
+      link: '/其他/index.md'
+    },
+    {
+      text: '浏览器',
+      link: '/其他/浏览器.md'
     }
   ]
 };
