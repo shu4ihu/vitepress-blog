@@ -12,3 +12,6 @@
 6. Promise.all / allSettled / race / any，Promise
 7. instanceof
 8. new
+9. 去重
+10. 柯里化
+11. apply、call、bind
