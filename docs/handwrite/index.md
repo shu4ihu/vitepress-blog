@@ -9,4 +9,6 @@
 3. 版本号比较
 4. 版本号排序
 5. Sleep
-6. Promise.all / allSettled / race / any
+6. Promise.all / allSettled / race / any，Promise
+7. instanceof
+8. new
