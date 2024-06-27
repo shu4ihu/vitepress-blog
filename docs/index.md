@@ -17,7 +17,7 @@ hero:
 features:
   - title: ✍️手写题
     details: 工作 / 面试常用的手写
-  - title: 📕自我认知下的 JavaScript
+  - title: 📕JavaScript
     details: 对红宝书中内容的理解和补充
   - title: 📘React
     details: React 使用及其原理
